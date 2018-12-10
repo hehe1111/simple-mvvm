@@ -180,6 +180,12 @@ bind(node, vm, expression, type) {
 },
 ```
 
+## 总结
+
+- 将 data 上的数据通过 `Object.defineProperty()` 代理到 Vue 实例上（实际上也等同于将对 Vue 实例上的数据的访问劫持到 data 上），这样就可以通过 Vue 实例直接操作 data
+- 在编译模板时，为模板上的每个 data 变量绑定一个 Watcher 实例（要传入一个回调，用于将新数据更新到视图），用于后续当 data 上的数据改变时，可以触发传入 Watcher 的回调，从而更新视图。**特别要注意的是，在生成 Watcher 实例时，通过手动获取 data 上的属性的值，来触发取值函数，同时需要借助一个全局属性 Dep.target 来记录 Watcher 实例，从而方便后续在 Obverser 中将 Watcher 实例添加到 Dep 实例的事件中心数组**
+- 在 Obverser 中对 data 进行监听，用 `Object.defineProperty` 来劫持对 data 的访问。**每个响应式数据都会对应一个事件中心数组，这个事件中心数组用于存放 Watcher 实例**。在取值函数（get）中，借助全局属性 Dep.target 来获取 Watcher 实例，从而实现将 Watcher 实例添加到 Dep 实例的事件中心数组。在赋值函数（set）中，通过 Dep 实例来遍历事件中心数组，执行每个 Watcher 实例，调用传入 Watcher 实例的回调，从而更新视图。
+
 ## 参考链接
 
 - [自己动手来做一个MVVM框架](http://www.bslxx.com/a/vue/vuexiangmuzuopin/2018/0412/1921.html)
