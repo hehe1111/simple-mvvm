@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>MVVM</title>
+</head>
+<body>
+  <div id="app">
+    <h1>{{ title }}</h1>
+    {{ message }}
+    <p>
+      <ul>
+        <li>{{ message }}</li>
+      </ul>
+    </p>
+    <input type="text" v-model="vmodel" autofocus>
+    <p>实时结果：<span style="color: red; word-break: break-all;">{{ vmodel }}</span></p>
+    <p v-text="vtext"></p>
+  </div>
+
+  <script src="./dep.js"></script>
+  <script src="./observer.js"></script>
+  <script src="./watcher.js"></script>
+  <script src="./compiler.js"></script>
+  <script src="./mvvm.js"></script>
+  <script>
+    const vm = new MVVM({
+      el: '#app',
+      data:{
+        title: '尝试写一个简单的 MVVM，实现 v-model v-text 和文本插值',
+        message: '可在嵌套 HTML 标签内进行文本插值',
+        vmodel: '编译 v-model 指令成功',
+        vtext: '编译 v-text 指令成功',
+      },
+    })
+  </script>
+</body>
+</html>
