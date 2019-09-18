@@ -18,14 +18,15 @@ Watcher.prototype = {
     const newValue = this.get()
     const oldValue = this.value
     if (newValue === oldValue) return
-    this.value = newValue
+    this.value = newValue // 这一句可以不要
     this.callback.call(this.vm, newValue, oldValue)
   },
 }
 
 /**
  * 注释 1
- * this.value = this.get()
+ * this.value = this.get() 或者只写 this.get() 就可以了
+ * 因为 this.value 其实用不到，重要的是，手动调用一次 this.get()
  * 通过一次手动取值，触发 MVVM 实例上的属性的取值函数，
  * 进而触发 data 上对应属性的取值函数，
  * 从而将 Watcher 实例添加进事件中心数组 dep.subs

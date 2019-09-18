@@ -192,7 +192,7 @@ bind(node, vm, expression, type) {
 - observe 函数通过 Object.defineProperty 劫持 data 下的响应式属性（添加 getter / setter 来拦截属性的取值 / 赋值），并且每一个响应式属性都有自己的 Dep 实例
 - compiler 方法编译模板，收集依赖（解析指令和文本插值变量`{{xxx}}`），将 vm 实例和变量一起传入 Watcher 构造函数，从而为每一个响应式属性各自添加一个 watcher 实例和一个事件中心数组，同时会在 watcher 实例上创建响应式属性的同名属性和值（this.expression = expression; this.value = value）
 - observe 函数拦截响应式属性的取 / 赋值（getter / setter），编译模板时的依赖收集则为响应式属性绑定一个 watcher 实例
-  - 在为响应式属性绑定一个 watcher 实例时，会去执行一次响应式属性的取值函数（getter），而在该取值函数（getter）中，会将 watcher 实例推入到事件中心数组中；为响应式属性赋值时，除了更新 vm 实例上的属性和 data 上的属性的值，还会去调用响应式属性的赋值函数（setter），从而遍历事件中心数组，调用 notify 函数，从而调用 watcher 实例的 update 函数，更新 watcher 实例上的同名属性的值（this.value）。（watcher 实例上的 value 是显示在页面上的值，因此只要保持 data 上的属性和 watcher 实例上的同名属性的值是同步的，就能实现为响应式属性赋值时，同步更新页面上的值，而保持值同步就是 watcher 实例的 update 函数的工作）
+  - 在为响应式属性绑定一个 watcher 实例时，会去执行一次响应式属性的取值函数（getter），而在该取值函数（getter）中，会将 watcher 实例推入到事件中心数组中；为响应式属性赋值时，除了更新 vm 实例上的属性和 data 上的属性的值，还会去调用响应式属性的赋值函数（setter），从而遍历事件中心数组，调用 notify 函数，从而调用 watcher 实例的 update 函数，来更新页面上显示的值。即：更新时，有两处更新：vm 实例和 data 上的属性；页面上显示的值（textContent / value）
 
 ## 参考链接
 
