@@ -52,44 +52,44 @@
 
 ```javascript
 // observer.js
-function observe (data) {
-  if (!data || typeof data !== 'object') {
-    return
+function observe(data) {
+  if (!data || typeof data !== "object") {
+    return;
   }
 
   Object.keys(data).forEach(key => {
-    defineReactive(data, key, data[key])
-  })
+    defineReactive(data, key, data[key]);
+  });
 }
 
 function defineReactive(target, key, value) {
-  const dep = new Dep()
+  const dep = new Dep();
 
   // 深度监听嵌套子对象
-  observe(value)
+  observe(value);
 
   Object.defineProperty(target, key, {
     configurable: false,
     enumerable: true,
     get() {
-      Dep.target && dep.addSub(Dep.target) // 注释 1
-      return value
+      Dep.target && dep.addSub(Dep.target); // 注释 1
+      return value;
     },
     set(newValue) {
-      if (newValue === value) { return }
-      value = newValue // 注释 2
-      dep.notify() // 注释 3
-    }
-  })
+      if (newValue === value) {
+        return;
+      }
+      value = newValue; // 注释 2
+      dep.notify(); // 注释 3
+    },
+  });
 }
 ```
 
 - 注释 1
   - `Dep.target && dep.addSub(Dep.target)` 添加 Watcher 实例
-
 - 注释 2
   - `value = newValue` 这里需要将 `newValue` 赋给 `value` ，是因为由于对 `get` 进行了拦截，当 `target.key` 的值发生改变时， `get` 返回的仍然是 `value` ，而不是 `target.key` 实时对应的值，因此要确保 `value` 与 `newValue` 同步
-
 - 注释 3
   - `dep.notify()` 属性的值（数据）发生改变，就发出通知，遍历该属性对应的事件中心数组 dep.subs，执行每个 Watche 实例，最终更新视图
 
@@ -98,29 +98,29 @@ function defineReactive(target, key, value) {
 ```javascript
 // watcher.js
 function Watcher(vm, expression, callback) {
-  this.vm = vm
-  this.expression = expression
-  this.callback = callback
+  this.vm = vm;
+  this.expression = expression;
+  this.callback = callback;
 
-  Dep.target = this // 注释 2
-  this.value = this.get() // 注释 1
+  Dep.target = this; // 注释 2
+  this.value = this.get(); // 注释 1
 }
 
 Watcher.prototype = {
   constructor: Watcher,
   get() {
-    const value = this.vm[this.expression]
-    Dep.target = null // 注释 3
-    return value
+    const value = this.vm[this.expression];
+    Dep.target = null; // 注释 3
+    return value;
   },
   update() {
-    const newValue = this.get()
-    const oldValue = this.value
-    if (newValue === oldValue) return
-    this.value = newValue
-    this.callback.call(this.vm, newValue, oldValue)
+    const newValue = this.get();
+    const oldValue = this.value;
+    if (newValue === oldValue) return;
+    this.value = newValue;
+    this.callback.call(this.vm, newValue, oldValue);
   },
-}
+};
 ```
 
 - 注释 1
@@ -180,14 +180,22 @@ bind(node, vm, expression, type) {
 },
 ```
 
-## 总结
+## 总结 1
 
 - 将 data 上的数据通过 `Object.defineProperty()` 代理到 Vue 实例上（实际上也等同于将对 Vue 实例上的数据的访问劫持到 data 上），这样就可以通过 Vue 实例直接操作 data
 - 在编译模板时，为模板上的每个 data 变量绑定一个 Watcher 实例（要传入一个回调，用于将新数据更新到视图），用于后续当 data 上的数据改变时，可以触发传入 Watcher 的回调，从而更新视图。**特别要注意的是，在生成 Watcher 实例时，通过手动获取 data 上的属性的值，来触发取值函数，同时需要借助一个全局属性 Dep.target 来记录 Watcher 实例，从而方便后续在 Obverser 中将 Watcher 实例添加到 Dep 实例的事件中心数组**
 - 在 Obverser 中对 data 进行监听，用 `Object.defineProperty` 来劫持对 data 的访问。**每个响应式数据都会对应一个事件中心数组，这个事件中心数组用于存放 Watcher 实例**。在取值函数（get）中，借助全局属性 Dep.target 来获取 Watcher 实例，从而实现将 Watcher 实例添加到 Dep 实例的事件中心数组。在赋值函数（set）中，通过 Dep 实例来遍历事件中心数组，执行每个 Watcher 实例，调用传入 Watcher 实例的回调，从而更新视图。
 
+## 总结 2：流程（2019.09.18 更新）
+
+- MVVM 构造函数将 data 下的每个响应式属性都**代理**到 vm 实例上
+- observe 函数通过 Object.defineProperty 劫持 data 下的响应式属性（添加 getter / setter 来拦截属性的取值 / 赋值），并且每一个响应式属性都有自己的 Dep 实例
+- compiler 方法编译模板，收集依赖（解析指令和文本插值变量`{{xxx}}`），将 vm 实例和变量一起传入 Watcher 构造函数，从而为每一个响应式属性各自添加一个 watcher 实例和一个事件中心数组，同时会在 watcher 实例上创建响应式属性的同名属性和值（this.expression = expression; this.value = value）
+- observe 函数拦截响应式属性的取 / 赋值（getter / setter），编译模板时的依赖收集则为响应式属性绑定一个 watcher 实例
+  - 在为响应式属性绑定一个 watcher 实例时，会去执行一次响应式属性的取值函数（getter），而在该取值函数（getter）中，会将 watcher 实例推入到事件中心数组中；为响应式属性赋值时，除了更新 vm 实例上的属性和 data 上的属性的值，还会去调用响应式属性的赋值函数（setter），从而遍历事件中心数组，调用 notify 函数，从而调用 watcher 实例的 update 函数，更新 watcher 实例上的同名属性的值（this.value）。（watcher 实例上的 value 是显示在页面上的值，因此只要保持 data 上的属性和 watcher 实例上的同名属性的值是同步的，就能实现为响应式属性赋值时，同步更新页面上的值，而保持值同步就是 watcher 实例的 update 函数的工作）
+
 ## 参考链接
 
-- [自己动手来做一个MVVM框架](http://www.bslxx.com/a/vue/vuexiangmuzuopin/2018/0412/1921.html)
-- [简述MVVM，并将其实现](http://www.bslxx.com/a/vue/mianshiti/2018/0729/2101.html)
+- [自己动手来做一个 MVVM 框架](http://www.bslxx.com/a/vue/vuexiangmuzuopin/2018/0412/1921.html)
+- [简述 MVVM，并将其实现](http://www.bslxx.com/a/vue/mianshiti/2018/0729/2101.html)
 - [数据劫持](https://yuchengkai.cn/docs/zh/frontend/framework.html#数据劫持)
