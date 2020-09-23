@@ -18,7 +18,7 @@ Watcher.prototype = {
     const newValue = this.get()
     const oldValue = this.value
     if (newValue === oldValue) return
-    this.value = newValue // 这一句可以不要
+    this.value = newValue
     this.callback.call(this.vm, newValue, oldValue)
   },
 }
