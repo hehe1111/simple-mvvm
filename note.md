@@ -53,36 +53,36 @@
 ```javascript
 // observer.js
 function observe(data) {
-  if (!data || typeof data !== "object") {
-    return;
+  if (!data || typeof data !== 'object') {
+    return
   }
 
   Object.keys(data).forEach(key => {
-    defineReactive(data, key, data[key]);
-  });
+    defineReactive(data, key, data[key])
+  })
 }
 
 function defineReactive(target, key, value) {
-  const dep = new Dep();
+  const dep = new Dep()
 
   // 深度监听嵌套子对象
-  observe(value);
+  observe(value)
 
   Object.defineProperty(target, key, {
     configurable: false,
     enumerable: true,
     get() {
-      Dep.target && dep.addSub(Dep.target); // 注释 1
-      return value;
+      Dep.target && dep.addSub(Dep.target) // 注释 1
+      return value
     },
     set(newValue) {
       if (newValue === value) {
-        return;
+        return
       }
-      value = newValue; // 注释 2
-      dep.notify(); // 注释 3
-    },
-  });
+      value = newValue // 注释 2
+      dep.notify() // 注释 3
+    }
+  })
 }
 ```
 
@@ -98,29 +98,29 @@ function defineReactive(target, key, value) {
 ```javascript
 // watcher.js
 function Watcher(vm, expression, callback) {
-  this.vm = vm;
-  this.expression = expression;
-  this.callback = callback;
+  this.vm = vm
+  this.expression = expression
+  this.callback = callback
 
-  Dep.target = this; // 注释 2
-  this.value = this.get(); // 注释 1
+  Dep.target = this // 注释 2
+  this.value = this.get() // 注释 1
 }
 
 Watcher.prototype = {
   constructor: Watcher,
   get() {
-    const value = this.vm[this.expression];
-    Dep.target = null; // 注释 3
-    return value;
+    const value = this.vm[this.expression]
+    Dep.target = null // 注释 3
+    return value
   },
   update() {
-    const newValue = this.get();
-    const oldValue = this.value;
-    if (newValue === oldValue) return;
-    this.value = newValue;
-    this.callback.call(this.vm, newValue, oldValue);
-  },
-};
+    const newValue = this.get()
+    const oldValue = this.value
+    if (newValue === oldValue) return
+    this.value = newValue
+    this.callback.call(this.vm, newValue, oldValue)
+  }
+}
 ```
 
 - 注释 1
@@ -190,12 +190,10 @@ bind(node, vm, expression, type) {
 
 - MVVM 构造函数将 data 下的每个响应式属性都**代理**到 vm 实例上
 - observe 函数通过 Object.defineProperty 劫持 data 下的响应式属性（添加 getter / setter 来拦截属性的取值 / 赋值），并且每一个响应式属性都有自己的 Dep 实例
-- compiler 方法编译模板，收集依赖（解析指令和文本插值变量`{{xxx}}`），将 vm 实例和变量一起传入 Watcher 构造函数，从而为每一个响应式属性各自添加一个 watcher 实例和一个事件中心数组，同时会在 watcher 实例上创建响应式属性的同名属性和值（this.expression = expression; this.value = value）
+- **compiler 方法编译模板，收集依赖**（通过**正则**解析指令和文本插值变量`{{xxx}}`），将 vm 实例和变量一起传入 Watcher 构造函数，从而为每一个响应式属性各自添加一个 watcher 实例和一个事件中心数组，同时会在 watcher 实例上创建响应式属性的同名属性和值（this.expression = expression; this.value = value）
 - observe 函数拦截响应式属性的取 / 赋值（getter / setter），编译模板时的依赖收集则为响应式属性绑定一个 watcher 实例
   - 在为响应式属性绑定一个 watcher 实例时，会去执行一次响应式属性的取值函数（getter），而在该取值函数（getter）中，会将 watcher 实例推入到事件中心数组中；为响应式属性赋值时，除了更新 vm 实例上的属性和 data 上的属性的值，还会去调用响应式属性的赋值函数（setter），从而遍历事件中心数组，调用 notify 函数，从而调用 watcher 实例的 update 函数，来更新页面上显示的值。即：更新时，有两处更新：vm 实例和 data 上的属性；页面上显示的值（textContent / value）
 
 ## 参考链接
 
-- [自己动手来做一个 MVVM 框架](http://www.bslxx.com/a/vue/vuexiangmuzuopin/2018/0412/1921.html)
-- [简述 MVVM，并将其实现](http://www.bslxx.com/a/vue/mianshiti/2018/0729/2101.html)
-- [数据劫持](https://yuchengkai.cn/docs/zh/frontend/framework.html#数据劫持)
+- [剖析 Vue 实现原理 - 如何实现双向绑定 mvvm](https://github.com/DMQ/mvvm)
