@@ -204,6 +204,8 @@ bind(node, vm, expression, type) {
 
 > 通知所有的 watcher 是指对应的 dep 保存的所有 watcher。**进行数据劫持的时候，循环遍历 data 中所有的属性，一个属性就会创建一个唯一的 dep**，当**初始化解析编译界面的时候，一个指令/表达式就是一个 watcher**，那么解析指令/表达式的值的时候就去读 data 中的属性，触发 getter，再触发添加 dep 添加订阅（将 watcher 添加到 dep.subs 中），当修改对应的属性的时候，触发 setter，那么就再去触发这个 dep 保存的所有 watcher。
 
+> Dep.target 可以理解成相当于一个全局变量，为了依赖收集
+
 ## 参考链接
 
 - [剖析 Vue 实现原理 - 如何实现双向绑定 mvvm](https://github.com/DMQ/mvvm)
