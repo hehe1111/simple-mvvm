@@ -206,6 +206,14 @@ bind(node, vm, expression, type) {
 
 > Dep.target 可以理解成相当于一个全局变量，为了依赖收集
 
+> [剖析 Vue.js 内部运行机制 - 响应式系统的依赖收集追踪原理](https://juejin.cn/book/6844733705089449991/section/6844733705228025869)
+
+评论区
+
+> 一个对象属性对应一个 dep，一个 dep 对应多个 watcher(一个对象属性可能再多个标签使用，那么就会有对应多个 watcher，这些 watcher 都会放入到这个对象属性唯一对应的 dep 中)，这是 Vue1.0 的实现，但数据过大时，就会有很多个 watcher，就会出现性能问题；所以在 Vue2.0 中引入的 VDOM，给每个 vue 组件绑定一个 watcher，这个组件上的数据的 dep 中都包含有该 watcher，当该组件数据发生变化时，就会通知 watcher 触发 update 方法，生成 VDOM，和旧的 VDOM 进行比较，更新改变的部分，极大的减少了 watcher 的数量，优化了性能；（所以，在 Vue2.0 中是一个组件对应一个 watcher）
+
+> Watcher 是有一个 id 属性的，每个 Watcher 的 id 是不一样的，用这个 id 就可以去重，在被 push 进去之前会先看看是否已经有相同 id 的 Watcher 存在即可
+
 ## 参考链接
 
 - [剖析 Vue 实现原理 - 如何实现双向绑定 mvvm](https://github.com/DMQ/mvvm)
