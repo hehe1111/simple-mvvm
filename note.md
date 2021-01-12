@@ -194,9 +194,9 @@ bind(node, vm, expression, type) {
 - `observe` 函数拦截响应式属性的取 / 赋值（`getter` / `setter`），编译模板时的依赖收集则为响应式属性绑定多个 `watcher` 实例
   - 在为响应式属性绑定 `watcher` 实例时，会去执行一次响应式属性的取值函数（`getter`），而在该取值函数（`getter`）中，会将 `watcher` 实例推入到事件中心数组中；为响应式属性赋值时，除了更新 `vm` 实例上的属性和 `data` 上的属性的值，还会去调用响应式属性的赋值函数（`setter`），从而遍历事件中心数组，调用 `notify` 函数，从而调用 `watcher` 实例的 `update` 函数，来更新页面上显示的值。即：更新时，有两处更新：`vm` 实例和 `data` 上的属性；页面上显示的值（`textContent` / `value`）
 
-## 2021.1.11 更新
+## 剖析 Vue.js 内部运行机制（2021.01.11 更新）
 
-> [剖析 Vue.js 内部运行机制 - Vue.js 运行机制全局概览](https://juejin.cn/book/6844733705089449991/section/6844733705211084808)
+> [Vue.js 运行机制全局概览](https://juejin.cn/book/6844733705089449991/section/6844733705211084808)
 >
 > 在修改对象的值的时候，会触发对应的 setter， setter 通知之前「依赖收集」得到的 Dep 中的每一个 Watcher，告诉它们自己的值改变了，需要重新渲染视图。这时候这些 Watcher 就会开始调用 update 来更新视图，当然这中间还有一个 patch 的过程以及使用队列来异步更新的策略
 
@@ -206,13 +206,19 @@ bind(node, vm, expression, type) {
 
 > Dep.target 可以理解成相当于一个全局变量，为了依赖收集
 
-> [剖析 Vue.js 内部运行机制 - 响应式系统的依赖收集追踪原理](https://juejin.cn/book/6844733705089449991/section/6844733705228025869)
+> [响应式系统的依赖收集追踪原理](https://juejin.cn/book/6844733705089449991/section/6844733705228025869)
 
 评论区
 
 > 一个对象属性对应一个 dep，一个 dep 对应多个 watcher(一个对象属性可能再多个标签使用，那么就会有对应多个 watcher，这些 watcher 都会放入到这个对象属性唯一对应的 dep 中)，这是 Vue1.0 的实现，但数据过大时，就会有很多个 watcher，就会出现性能问题；所以在 Vue2.0 中引入的 VDOM，给每个 vue 组件绑定一个 watcher，这个组件上的数据的 dep 中都包含有该 watcher，当该组件数据发生变化时，就会通知 watcher 触发 update 方法，生成 VDOM，和旧的 VDOM 进行比较，更新改变的部分，极大的减少了 watcher 的数量，优化了性能；（所以，在 Vue2.0 中是一个组件对应一个 watcher）
 
 > Watcher 是有一个 id 属性的，每个 Watcher 的 id 是不一样的，用这个 id 就可以去重，在被 push 进去之前会先看看是否已经有相同 id 的 Watcher 存在即可
+
+## 官方中文文档（2021.01.12 更新）
+
+[深入响应式原理#如何追踪变化](https://cn.vuejs.org/v2/guide/reactivity.html#如何追踪变化)
+
+> **每个组件实例都对应一个 watcher 实例**，它会**在组件渲染的过程中把“接触”过的数据 property 记录为依赖**。之后当依赖项的 setter 触发时，会通知 watcher，从而使它关联的组件重新渲染。
 
 ## 参考链接
 
